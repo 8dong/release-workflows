@@ -64,3 +64,71 @@ export default $config({
         - cert: SSL 인증서 ARN
 
       - environment: 배포시 사용될 환경변수 설정
+
+### .changesets
+
+changesets는 프로젝트 버전과 CHANGELOG 등 편라히게 관리해주는 라이브러리이며 Semver규칙에 따라 버전을 관리
+
+`yarn chageset init` 명령어 실행시 프로젝트 루트에 .changeset 폴더가 생성
+
+추가적으로 changeset 라이브러리 플러그인으로 @changesets/changelog-github를 사용하면 Github 리포지토리에 CHANGELOG를 자동으로 생성하고, 해당 플러그인은 Github API를 사용하여 커밋 메시지와 PR(pull request) 제목 및 설명을 기반으로 CHANGELOG 항목을 생성
+
+#### config.json
+
+```json
+// .changeset/config.json
+
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.2/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "OWNER/REPO_NAME" }
+  ],
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "privatePackages": {
+    "tag": true,
+    "version": true
+  }
+}
+```
+
+- changelog: CHANGELOG를 생성할 방법을 정의
+
+  - repo: CHANGELOG가 생성될 Gihub repo 명 작성
+
+- commit: false로 설정시 Changesets는 자동으로 커밋을 만들지 않
+
+- baseBranch: 기본 브랜치를 정의
+
+- updateInternalDependencies: 내부 종속성의 업데이트 정책을 정의
+
+- privatePackages: 비공식 패키지에 대한 동작을 정의, npm에 배포하지 않는 패키지라면 해당 옵션 추가
+
+  - tag: true 설정시 패키지를 태그 관리 허용
+
+  - version: true 설정시 패키지의 버전 관리 허용
+
+#### changesets Command
+
+`yarn changeset version` 명령어 실행시 .changeset 폴더의 마크다운 파일을 기반으로 이전에 기록한 변경 사항을 읽고 각 패키지에 대해 어떤 버전 변경이 필요한지를 결정하고, package.json의 version 정보를 변경시켜 줍니다. 또한 마크다운에 작성한 설명을 기반으로 CHANGELOG.md 파일을 업데이트, 변경된 version 정보와 업데이트된 CHANGELOG.md가 자동으로 commit, Release Note 작성을 자동으로 수행
+
+```json
+// .changeset/changeset.md
+
+---
+"패키지 이름": major | minor | patch
+---
+CHANGELOG.md에 작성될 내용 작성
+```
+
+위 파일처럼 .changeset 폴더 내 유니크한 이름의 markdown 파일을 생성하고 위 템플릿 형태로 작성하고 `yarn changeset version` 명령어를 실행
+
+실행하면 해당 마크다운 파일 기반으로 version, CHANGELOG, Release Note가 업데이트 되고, 해당 마크다움 파일은 자동으로 제거
+
+`yarn changeset version` 명령어 실행 이후 `yarn changeset tag` 명령어 실행하면 새로 업데이트된 버전 정보에 맞는 Git tag를 새롭게 생성하고 업데이트
