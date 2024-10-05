@@ -1,5 +1,11 @@
 # release
 
+## 2.0.0
+
+### Major Changes
+
+- [#9](https://github.com/8dong/release/pull/9) [`9ea4149`](https://github.com/8dong/release/commit/9ea41495a39a8a536e0dd6c9f83a15fc47b36d4e) Thanks [@8dong](https://github.com/8dong)! - chore: prod-release.yml update-dev-branch job 이슈를 수정합니다.
+
 ## 1.0.0
 
 ### Major Changes
