@@ -75,9 +75,9 @@ changesets는 프로젝트 버전과 CHANGELOG 등 편라히게 관리해주는 
 
 #### config.json
 
-```json
-// .changeset/config.json
+아래는 `yarn changeset init` 명령어 실행시 생성되는 config 파일이며, 프로젝트 루트 경로에 .changeset/config.json으로 명령서 실행시 자동으로 생성
 
+```json
 {
   "$schema": "https://unpkg.com/@changesets/config@3.0.2/schema.json",
   "changelog": [
@@ -118,12 +118,11 @@ changesets는 프로젝트 버전과 CHANGELOG 등 편라히게 관리해주는 
 
 `yarn changeset version` 명령어 실행시 .changeset 폴더의 마크다운 파일을 기반으로 이전에 기록한 변경 사항을 읽고 각 패키지에 대해 어떤 버전 변경이 필요한지를 결정하고, package.json의 version 정보를 변경시켜 줍니다. 또한 마크다운에 작성한 설명을 기반으로 CHANGELOG.md 파일을 업데이트, 변경된 version 정보와 업데이트된 CHANGELOG.md가 자동으로 commit, Release Note 작성을 자동으로 수행
 
-```json
-// .changeset/changeset.md
-
+```markdown
 ---
 "패키지 이름": major | minor | patch
 ---
+
 CHANGELOG.md에 작성될 내용 작성
 ```
 
