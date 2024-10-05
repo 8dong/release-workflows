@@ -13,9 +13,11 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+
       - name: Enable corepack
-      - uses: actions/checkout@v4
-      - run: corepack enable
+        run: corepack enable
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -49,7 +51,7 @@ jobs:
     needs: release
     if: always()
 
-    steps:
+    # steps:
       # 테스트를 위한 workflow이므로 비활성
       # - name: Send Slack notification
       #   if: needs.release.outputs.published == 'true'
