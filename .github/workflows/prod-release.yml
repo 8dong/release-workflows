@@ -103,15 +103,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # 테스트를 위한 workflow이므로 비활성
+  # notification:
 
-  notification:
-
-    runs-on: ubuntu-latest
-    needs: release
-    if: always()
+  #   runs-on: ubuntu-latest
+  #   needs: release
+  #   if: always()
 
     # steps:
-      # 테스트를 위한 workflow이므로 비활성
       # - name: Send Slack notification
       #   if: needs.release.outputs.published == 'true'
       #   uses: slackapi/slack-github-action@v1.26.0
