@@ -32,8 +32,8 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          title: "chore: Development release"
-          commit: "chore: Development release"
+          title: "chore: Production release"
+          commit: "chore: Production release"
           version: yarn changeset:version
           publish: yarn release
         env:
@@ -77,10 +77,10 @@ jobs:
         run: |
           version=$(curl --silent -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${{ github.repository }}/releases/latest"| jq -r .tag_name)
           
-          if [-z "$version"]; then
+          if [ -z "$version" ]; then
             version="0.0.0"
           else
-            version="${version#v}""
+            version="${version#v}"
           fi
 
           echo "VERSION=${version}" >> $GITHUB_ENV
