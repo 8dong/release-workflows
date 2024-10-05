@@ -2,18 +2,19 @@ name: development release
 
 on:
   push:
-    branches: [dev]
+    branches: [dev] # dev branch에 push되는 경우 실행
 
 jobs:
   release:
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    # environment
+    runs-on: ubuntu-latest # ubuntu-latest 환경에서 수행
+    permissions: # workflow가 실행되는 동안 특정 GitHub API 권한을 제어
+      contents: write # 파일 추가, 수정, 삭제, commit 생성 및 푸시 허용
+      pull-requests: write # PR 생성 허용
 
     steps:
-      - name: Checkout main branch
+      - name: Checkout main branch # main 브랜치로 checkout
         uses: actions/checkout@v4
 
       - name: Enable corepack
