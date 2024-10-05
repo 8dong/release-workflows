@@ -237,3 +237,170 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 ```
+
+### prod-release.yml
+
+- production release workflow의 경우 main 브랜치에 commit이 push되는 경우에 수행
+
+  - release jobs
+
+    - steps
+
+      - `name: Create Release Pull Request`
+
+        - `title: "chore: Development release"`: 생성될 PR의 타이틀
+
+        - `commit: "chore: Development release"`: 생성될 commit 내용
+
+        - `version: yarn changeset:version`: .changeset 폴더내 변경사항이 작성된 md 파일 존재시 실행될 명령어로 md 파일 기반으로 package.json의 version, CHANGELOG.md 업데이트하고 PR을 생성
+
+        - `publish: yarn release`: 버전이 업데이트된 경우 실행될 명령어로 Github 릴리즈, 태그가 생성되고 Github repository에 추가, 성공시 outputs.published 값 "true" 반환
+
+  - update-dev-brand jobs: main 브랜치의 version과 dev 브랜치의 version 동기화 작업
+
+    - steps
+
+      - `name: Checkout dev branch`: dev 브랜치의 최신 커밋을 체크아웃하고 이후 step들 또한 해당 환경에서 작업 수행
+
+      - `name: Get release version`
+
+        - `curl "https://,,,"`: URL에 HTTP 요청을 전송
+
+        - `- H ",,,"`: 요청 헤더 설정
+
+        - `jq -r .tag_name`: jq는 JSON 데이터를 처리하는 유틸리티이며, -r 플래그를 통해 문자열 형태로 반환하도록 하며, .tag_name은 JSON 객체에서 tag_name 필드를 추출
+
+        - `if [-z "$version"]; then ,,, else ,,, fi`: -z 옵션을 통해 version 변수가 비어있는지 확인후 version 변수에 값 할당
+
+        - `echo "VERSION=${version}" >> $GITHUB_ENV`: VERSION 환경변수에 version 값 할당
+
+      - `name: Delete changeset markdown file`: .changeset 폴더 내 변경사항을 담고 있는 마크다운 파일 제거
+
+      - `name: Update package.json version`
+
+        - `jq --arg version "$VERSION"`: VERSION 환경 변수 값을 version 변수로 전달
+
+        - `'.version = $version' package.json > tmp.json`: package.json의 version 필드 값을 앞에서 저장된 version 값으로 업데이트된 내용을 tmp.json 파일 생성하여 저장
+
+        - `mv tmp.json package.json`: tmp.json 내용을 package.json에 덮어씌워 업데이트
+
+      - `name: Create commit and push to dev branch`: 변경사항들을 commit 생성후 dev 브랜치에 push
+
+
+```yml
+name: production release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Enable corepack
+      - uses: actions/checkout@v4
+      - run: corepack enable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "yarn"
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Create Release Pull Request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          title: "chore: Production release"
+          commit: "chore: Production release"
+          version: yarn changeset:version
+          publish: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        if: steps.changesets.outputs.published == 'true'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Deploy
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          NEXT_PUBLIC_NODE_ENV: 'production'
+        run: |
+          yarn run deploy:prod
+
+    outputs: 
+      published: ${{ steps.changesets.outputs.published }}
+
+  update-dev-branch:
+
+    runs-on: ubuntu-latest
+    needs: release
+    permissions:
+      contents: write
+    if: needs.release.outputs.published == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Get current release version
+        run: |
+          version=$(curl --silent -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${{ github.repository }}/releases/latest"| jq -r .tag_name)
+
+          if [-z "$version"]; then
+            version="0.0.0"
+          else
+            version="${version#v}"
+          fi
+
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+      - name: Delete changeset markdown file
+        run: |
+          find .changeset -type f -name "${VERSION}.md" -delete
+
+      - name: Update package.json version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Create commit and push to dev branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: Update package.json version to $VERSION"
+          git push origin dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notification:
+
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        if: needs.release.outputs.published == 'true'
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          channel-id: "채널 ID"
+          slack-message: "${{ github.repository }} 개발 배포 ${{ needs.release.result == 'success' &&  '✅ 성공' || '❌ 실패'}}"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+```
