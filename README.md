@@ -404,3 +404,37 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 ```
+
+## Monorepo
+
+changeset의 경우 모노레포 환경에서도 상호의존하는 패키지들의 일관성을 유지 및 쉽게 배포 지원
+
+### yarn berry with monorepo
+
+yarn beryy의 경우 모노레포를 지원하며 모노레포를 사용하기 위해서 루트 경로의 package.json에 workspaces를 추가
+
+```json
+{
+  "workspaces": [
+    "packages/*"
+  ]
+}
+```
+
+이후 프로젝트 루트에 packages 폴더 생성 후 packages 폴더 내 프로젝트들을 생성하면 packages 하위 모든 디렉토리들을 workspace로 인식
+
+각 workspace에서 명령어 사용하려면 `yarn workspace 패키지이름` 형식으로 실행
+
+### chanageset with monorepo
+
+changeset은 각 패키지에 대한 버전과 배포를 따로 관리하는 것을 지원하며 변경사항 내용을 작성하는 .chnageset 폴더 내 마크다운 파일을 아래와 같이 작성
+
+```markdown
+---
+"패키지 이름": patch | minor | major
+---
+
+CHANGELOG.md에 작성될 내용 작성
+```
+
+각 페키지의 package.json에 작성된 프로젝트 이름을 작성하면 해당 패키지에 대한 버전과 배포를 관리
