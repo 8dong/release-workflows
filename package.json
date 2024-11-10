@@ -1,0 +1,35 @@
+{
+  "name": "release",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "deploy:dev": "sst deploy --stage dev",
+    "refresh:dev": "sst refresh --stage dev",
+    "deploy:prod": "sst deploy --stage production",
+    "refresh:prod": "sst refresh --stage production",
+    "changeset:version": "changeset version",
+    "release": "changeset tag",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.13",
+    "react": "^18",
+    "react-dom": "^18",
+    "sst": "^3.1.49"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.8",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "aws-cdk-lib": "2.142.1",
+    "constructs": "10.3.0",
+    "sst": "^3.1.49",
+    "typescript": "^5"
+  },
+  "packageManager": "yarn@4.5.0"
+}
