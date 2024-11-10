@@ -1,0 +1,124 @@
+name: production release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "yarn"
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Create Release Pull Request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          title: "chore: Production release" # PR 타이틀
+          commit: "chore: Production release" # commit 내용
+          version: yarn changeset:version # .changeset 폴더 내 변경사항을 갖는 markdown 파일 존재시 실행될 명령어
+          publish: yarn release # 버전 변경된 경우 실행될 명령어
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 테스트를 위한 workflow이므로 비활성
+      # - name: Configure AWS credentials
+      #   if: steps.changesets.outputs.published == 'true'
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ap-northeast-2
+
+      # 테스트를 위한 workflow이므로 비활성
+      # - name: Deploy
+      #   if: steps.changesets.outputs.published == 'true'
+      #   env:
+      #     NEXT_PUBLIC_NODE_ENV: 'development'
+      #   run: |
+      #     yarn run deploy:dev
+
+    outputs: 
+      published: ${{ steps.changesets.outputs.published }}
+
+  update-dev-branch:
+
+    runs-on: ubuntu-latest
+    needs: release
+    permissions:
+      contents: write
+    if: needs.release.outputs.published == 'true'
+    
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Get release version
+        # main 브랜치 package.json의 version 필드 값 VERSION 환경변수에 저장
+        run: |
+          version=$(curl --silent -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${{ github.repository }}/releases/latest"| jq -r .tag_name)
+          
+          if [ -z "$version" ]; then
+            version="0.0.0"
+          else
+            version="${version#v}"
+          fi
+
+          echo "VERSION=${version}" >> $GITHUB_ENV
+
+      # dev 브랜치의 변경사항 markdown 파일 제거
+      - name: Delete changeset markdown file
+        run: |
+          find .changeset -type f -name "${VERSION}.md" -delete
+
+      # dev 브랜치 package.json version 필드 값 VERSION 환경변수 값으로 업데이트
+      - name: Update package.json version
+        run: |
+          jq --arg version "$VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Create commit and push to dev branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: Update package.json version to $VERSION"
+          git push origin dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 테스트를 위한 workflow이므로 비활성
+  # notification:
+
+  #   runs-on: ubuntu-latest
+  #   needs: release
+  #   if: always()
+
+    # steps:
+      # - name: Send Slack notification
+      #   if: needs.release.outputs.published == 'true'
+      #   uses: slackapi/slack-github-action@v1.26.0
+      #   with:
+      #     channel-id: "채널 ID"
+      #     slack-message: "${{ github.repository }} 개발 배포 ${{ needs.release.result == 'success' &&  '✅ 성공' || '❌ 실패'}}"
+      #   env:
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

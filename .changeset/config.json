@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.2/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "8dong/release" }
+    { "repo": "8dong/release-workflows" }
   ],
   "commit": false,
   "fixed": [],
