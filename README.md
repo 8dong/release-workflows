@@ -19,7 +19,7 @@ packageManager은 yarn@4.5.0(yarn berry)를 사용하였으며, deploy는 sst(v^
 export default $config({
   app(input) {
     return {
-      name: 'releases',
+      name: 'release-workflows',
       home: 'aws',
       providers: {
         aws: {
@@ -30,7 +30,7 @@ export default $config({
     }
   },
   async run() {
-    new sst.aws.Nextjs('Release', {
+    new sst.aws.Nextjs('ReleaseWorkflows', {
       imageOptimization: {
         memory: '512 MB'
       }

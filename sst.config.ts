@@ -3,7 +3,7 @@
 export default $config({
   app(input) {
     return {
-      name: 'releases',
+      name: 'release-workflows',
       home: 'aws',
       providers: {
         aws: {
@@ -14,7 +14,7 @@ export default $config({
     }
   },
   async run() {
-    new sst.aws.Nextjs('Release', {
+    new sst.aws.Nextjs('ReleaseWorkflows', {
       imageOptimization: {
         memory: '512 MB'
       }
