@@ -128,7 +128,7 @@ CHANGELOG.md에 작성될 내용 작성
 
 위 파일처럼 .changeset 폴더 내 유니크한 이름의 markdown 파일을 생성하고 위 템플릿 형태로 작성하고 `yarn changeset version` 명령어를 실행합니다.
 
-실행하면 해당 마크다운 파일 기반으로 version, CHANGELOG, Release Note가 업데이트 되고, 해당 마크다움 파일은 자동으로 제거됩니다.
+실행하면 해당 마크다운 파일 기반으로 version, CHANGELOG, Release Note가 업데이트 되고, 해당 마크다운 파일은 자동으로 제거됩니다.
 
 `yarn changeset version` 명령어 실행 이후 `yarn changeset tag` 명령어 실행하면 새로 업데이트된 버전 정보에 맞는 Git tag를 새롭게 생성하고 업데이트됩니다.
 
@@ -229,7 +229,6 @@ jobs:
 
     steps:
       - name: Send Slack notification
-        if: needs.release.outputs.published == 'true'
         uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: "채널 ID"
@@ -363,7 +362,7 @@ jobs:
           version=$(curl --silent -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${{ github.repository }}/releases/latest"| jq -r .tag_name)
 
           if [ -z "$version" ]; then
-            version="0.0.0"
+            version="0.0.1"
           else
             version="${version#v}"
           fi
@@ -400,7 +399,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: "채널 ID"
-          slack-message: "${{ github.repository }} 개발 배포 ${{ needs.release.result == 'success' &&  '✅ 성공' || '❌ 실패'}}"
+          slack-message: "${{ github.repository }} 상용 배포 ${{ needs.release.result == 'success' &&  '✅ 성공' || '❌ 실패'}}"
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 ```

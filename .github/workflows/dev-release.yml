@@ -31,7 +31,6 @@ jobs:
 
       # 테스트를 위한 workflow이므로 비활성
       # - name: Configure AWS credentials
-      #   if: steps.changesets.outputs.published == 'true'
       #   uses: aws-actions/configure-aws-credentials@v1
       #   with:
       #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -40,7 +39,6 @@ jobs:
 
       # 테스트를 위한 workflow이므로 비활성
       # - name: Deploy
-      #   if: steps.changesets.outputs.published == 'true'
       #   env:
       #     NEXT_PUBLIC_NODE_ENV: 'development'
       #   run: |
@@ -56,7 +54,6 @@ jobs:
     # steps:
       # 테스트를 위한 workflow이므로 비활성
       # - name: Send Slack notification
-      #   if: needs.release.outputs.published == 'true'
       #   uses: slackapi/slack-github-action@v1.26.0
       #   with:
       #     channel-id: "채널 ID"
